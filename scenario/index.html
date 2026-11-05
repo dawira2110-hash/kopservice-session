@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>КопСервис · Сессия 4</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+<style>
+/* Layout: тёмная шапка JTBD → паспорт → лента тайминга в масштабе 180 мин → блоки сценария с липкой навигацией */
+:root{
+  --ink:#242525; --bg:#FFFFFF; --surface:#F4F5F7; --line:#CED2DA; --muted:#6B6E73;
+  --accent:#F2F84C; --on-accent:#242525; --head-bg:#242525; --head-fg:#FFFFFF; --head-muted:#B9BDC4;
+  --font:"Montserrat", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ink:#ECEDEF; --bg:#1A1B1B; --surface:#242525; --line:#3A3C3D; --muted:#A3A7AD;
+  --head-bg:#111212; --head-fg:#FFFFFF; --head-muted:#A3A7AD; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ink:#ECEDEF; --bg:#1A1B1B; --surface:#242525; --line:#3A3C3D; --muted:#A3A7AD;
+  --head-bg:#111212; --head-fg:#FFFFFF; --head-muted:#A3A7AD; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-weight:500;font-size:14px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+h1,h2,h3{font-weight:800;text-wrap:balance;line-height:1.2;margin:0}
+p{margin:0}
+ul,ol{margin:0;padding-left:1.2em;display:grid;gap:6px}
+b,strong{font-weight:700}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+
+/* Шапка */
+header{background:var(--head-bg);color:var(--head-fg)}
+header .wrap{padding-block:48px 40px;display:grid;gap:14px}
+header .eyebrow{color:var(--head-muted)}
+header h1{font-size:clamp(25px,4.5vw,41px);letter-spacing:-.01em}
+header h1 mark{background:var(--accent);color:var(--on-accent);padding:0 .15em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+header .meta{display:flex;flex-wrap:wrap;gap:8px 22px;color:var(--head-muted);font-size:13px;font-weight:600}
+
+/* Навигация */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+nav a{flex:none;text-decoration:none;color:var(--muted);font-size:12px;font-weight:700;padding:6px 10px;border-radius:6px;white-space:nowrap}
+nav a:hover,nav a:focus-visible{color:var(--ink);background:var(--surface);outline:none}
+
+main .wrap{display:grid;gap:56px;padding-block:44px 72px}
+section{display:grid;gap:22px;scroll-margin-top:64px}
+.sec-head{display:grid;gap:8px;border-top:2px solid var(--ink);padding-top:18px}
+.sec-head h2{font-size:clamp(20px,3.1vw,27px)}
+.facts{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);font-weight:600}
+.facts b{color:var(--ink)}
+.task{max-width:68ch}
+h3{font-size:16px}
+.sub{display:grid;gap:12px}
+.sub h3 .t{color:var(--muted);font-weight:600}
+
+/* Паспорт */
+.passport{display:grid;grid-template-columns:1.4fr 1fr;gap:28px}
+.passport > *{min-width:0}
+.passport ol{counter-reset:r;list-style:none;padding:0;gap:10px}
+.passport ol li{counter-increment:r;display:grid;grid-template-columns:28px 1fr;gap:8px}
+.passport ol li::before{content:counter(r);font-weight:800;font-variant-numeric:tabular-nums}
+.fix{display:grid;gap:14px;align-content:start}
+.fix div{background:var(--surface);border-radius:10px;padding:16px 18px;display:grid;gap:6px}
+.fix .eyebrow{color:var(--muted)}
+
+/* Лента тайминга */
+.ribbon{display:flex;height:58px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.ribbon div{display:flex;flex-direction:column;justify-content:center;padding:0 8px;border-right:1px solid var(--line);min-width:0;font-size:11px;font-weight:700;line-height:1.2}
+.ribbon div:last-child{border-right:0}
+.ribbon span{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ribbon em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ribbon .brk{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--bg) 6px 12px);color:var(--muted)}
+.ribbon .key{background:var(--ink);color:var(--bg)}
+.ribbon .key span{color:var(--bg);opacity:.7}
+
+/* Таблицы */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px;line-height:1.45}
+th{background:var(--head-bg);color:var(--head-fg);text-align:left;font-weight:700;padding:12px 14px;vertical-align:bottom}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
+td.num,th.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.brk td{background:var(--surface);color:var(--muted)}
+.timing td:first-child{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.timing td:nth-child(2){font-weight:700}
+.note{font-size:13px;color:var(--muted);max-width:75ch}
+.note b{color:var(--ink)}
+
+/* Скрипты */
+.quote{border-left:3px solid var(--ink);padding:4px 0 4px 18px;display:grid;gap:10px;max-width:72ch;font-style:italic}
+.quote .eyebrow{font-style:normal}
+.result{background:var(--surface);border-radius:10px;padding:14px 18px;max-width:80ch}
+.result b{margin-right:4px}
+
+/* Направления и сценарии */
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{border:1.5px solid var(--ink);border-radius:10px;padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.card h4{margin:0;font-size:14px;font-weight:800}
+.card .need{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.regions{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.regions div{background:var(--surface);border-radius:10px;padding:14px 16px;display:grid;gap:4px}
+.scen{display:grid;gap:10px}
+.scen .row{display:grid;grid-template-columns:170px 1fr 1.2fr;gap:14px;border:1px solid var(--line);border-radius:10px;padding:14px 16px;align-items:start}
+.scen .row > *{min-width:0}
+.scen .row b{font-weight:800}
+.scen .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;display:block;margin-bottom:2px}
+.rule{background:var(--head-bg);color:var(--head-fg);border-radius:10px;padding:18px 20px;max-width:80ch}
+
+/* Матрица */
+.matrix th.m2{background:var(--accent);color:var(--on-accent)}
+.matrix td:first-child{font-weight:800;white-space:nowrap}
+.matrix th small{display:block;font-weight:600;opacity:.75;font-size:11px;margin-top:2px}
+.matrix table{min-width:860px}
+
+.hints{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.hints div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px}
+.hints b{display:block;margin-bottom:2px}
+
+.brkband{display:flex;align-items:center;gap:14px;color:var(--muted);font-weight:700}
+.brkband::before,.brkband::after{content:"";flex:1;height:1px;background:var(--line)}
+
+footer .wrap{padding-block:24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+
+@media (max-width:760px){
+  .passport,.regions,.cards3{grid-template-columns:1fr}
+  .scen .row{grid-template-columns:1fr}
+  .ribbon{height:auto;flex-wrap:wrap}
+  .ribbon div{flex:1 1 30% !important;padding:8px;border-bottom:1px solid var(--line)}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+
+/* Вопросы и ответы */
+.qa{display:grid;gap:12px;counter-reset:q}
+.qa-item{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:12px;counter-increment:q}
+.qa-item > *{min-width:0}
+.qa-item label{display:grid;gap:4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.qa-item label:first-child::before{content:"Вопрос " counter(q)}
+.qa-item label:nth-child(2)::before{content:"Ответ"}
+.qa-item textarea{font:inherit;font-size:14px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:72px;resize:vertical;width:100%}
+.qa-item textarea:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+.qa-del{margin-top:20px;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:16px;line-height:1;cursor:pointer}
+.qa-del:hover,.qa-del:focus-visible{color:var(--ink);border-color:var(--ink);outline:none}
+.qa-add{justify-self:start;display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--ink);background:transparent;color:var(--ink);font:inherit;font-weight:700;font-size:13px;padding:10px 16px;border-radius:10px;cursor:pointer}
+.qa-add span{font-size:16px;line-height:1}
+.qa-add:hover,.qa-add:focus-visible{background:var(--surface);outline:none}
+@media (max-width:640px){.qa-item{grid-template-columns:1fr}.qa-del{margin-top:0;justify-self:end}}
+
+/* Регионы */
+.rtabs{display:flex;flex-wrap:wrap;gap:8px}
+.rtab{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:13px;font-weight:700;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;transition:background .2s,color .2s,border-color .2s,transform .2s}
+.rtab:hover{border-color:var(--ink);transform:translateY(-1px)}
+.rtab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.rtab[aria-selected="true"]{background:var(--head-bg);color:var(--head-fg);border-color:var(--head-bg)}
+.rtab__dot{width:8px;height:8px;border-radius:50%;background:transparent;border:1.5px solid currentColor;opacity:.5}
+.rtab.filled .rtab__dot{background:var(--accent);border-color:var(--accent);opacity:1}
+.rpanels{border:1px solid var(--line);border-radius:14px;padding:22px}
+.rp{display:grid;gap:20px}
+.rp:not([hidden]){animation:rpin .35s ease}
+@keyframes rpin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rp__head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.rp__name{font-size:22px;margin-top:4px}
+.rname{font:inherit;font-size:22px;font-weight:800;color:var(--ink);background:transparent;border:0;border-bottom:1px dashed var(--line);padding:2px 0;margin-top:4px;width:min(100%,420px)}
+.rname:focus{outline:none;border-bottom-color:var(--ink)}
+.rchip{font-size:12px;font-weight:700;border:1px solid var(--ink);border-radius:999px;padding:5px 12px}
+.rp__grid{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}
+.rp__grid > *{min-width:0}
+.rp__know{background:var(--surface);border-radius:10px;padding:16px 18px;display:grid;gap:10px;align-content:start}
+.rp__know ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.rp__know li{display:grid;gap:2px;font-size:13px;line-height:1.5}
+.rp__know li b{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rp__form{display:grid;gap:14px;align-content:start}
+.fld{display:grid;gap:6px}
+.fld > span{font-size:12px;font-weight:700}
+.fld input,.fld textarea,.acts input{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+.fld textarea{resize:vertical;min-height:56px}
+.fld--big textarea{min-height:110px}
+.fld input:focus,.fld textarea:focus,.acts input:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+.acts{display:grid;gap:8px}
+.acts__h,.act{display:grid;grid-template-columns:1fr 180px 36px;gap:8px;align-items:center}
+.acts__h{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.acts__t{font-size:12px;font-weight:700}
+.acts__list{display:grid;gap:8px}
+.act{animation:rpin .3s ease}
+.act .qa-del{margin-top:0}
+.acts__add{margin-top:4px}
+@media (max-width:760px){.rp__grid{grid-template-columns:1fr}.rpanels{padding:16px}.acts__h{display:none}.act{grid-template-columns:1fr 36px}.act input[type="text"]:nth-child(2){grid-column:1}}
+@media (prefers-reduced-motion:reduce){.rp:not([hidden]),.act{animation:none}.rtab{transition:none}}
+
+/* Карточки функций */
+.fc-status{font-size:13px;color:var(--muted)}
+.fc-status:empty{display:none}
+.fcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:14px}
+.fcard{border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;align-content:start;background:var(--bg);transition:border-color .25s, box-shadow .25s;animation:rpin .35s ease;scroll-margin-top:80px}
+.fcard:focus-within{border-color:var(--ink);box-shadow:0 10px 24px rgba(36,37,37,.08)}
+.fcard.hit{border-color:var(--ink);box-shadow:0 0 0 3px var(--accent)}
+.fcard__top{display:flex;align-items:center;gap:10px}
+.fcard__title{flex:1;min-width:0;font:inherit;font-size:18px;font-weight:800;color:var(--ink);background:transparent;border:0;border-bottom:1px dashed var(--line);padding:4px 0}
+.fcard__title:focus{outline:none;border-bottom-color:var(--ink)}
+.fcard__prog{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.fcard__prog.done{color:var(--ink)}
+.fcard__prog.done::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);border:1px solid var(--ink);margin-right:6px}
+.fcard .fld textarea{min-height:64px}
+.fcard__foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px}
+.fbtn{font:inherit;font-size:12px;font-weight:700;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.fbtn:hover,.fbtn:focus-visible{border-color:var(--ink);outline:none}
+.fbtn--danger{color:#B42318;border-color:#E8B4AE}
+.fcard__saved{font-size:11px;color:var(--muted)}
+.fcard[data-ro] .fcard__title,.fcard[data-ro] textarea,.fcard[data-ro] input{pointer-events:none;border-style:solid;background:var(--surface)}
+
+/* Карточки функций: горизонтальная раскладка */
+.fcards{grid-template-columns:1fr !important}
+.fcard{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:14px;row-gap:10px;padding:14px 18px}
+.fcard__top,.fcard__foot{grid-column:1 / -1}
+.fcard .fld textarea{min-height:52px}
+.fcard .fld > span{font-size:12px}
+@media (max-width:900px){.fcard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.fcard{grid-template-columns:1fr}}
+
+.fcard__top{gap:16px;flex-wrap:wrap}
+.fcard__title{flex:2 1 260px}
+.fcard__owner{flex:1 1 200px;min-width:0;font:inherit;font-size:14px;font-weight:600;color:var(--muted);background:transparent;border:0;border-bottom:1px dashed var(--line);padding:6px 0}
+.fcard__owner:focus{outline:none;color:var(--ink);border-bottom-color:var(--ink)}
+.fcard__owner::placeholder{color:var(--muted);opacity:.7}
+.fcard__foot{justify-content:flex-end;padding-top:8px}
+.fcard[data-ro] .fcard__owner{pointer-events:none}
+
+/* Сворачиваемые блоки */
+section.fold{gap:0}
+.sec-head[role="button"]{cursor:pointer;position:relative;padding-right:44px;border-radius:4px}
+.sec-head[role="button"]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.sec-head .tog{position:absolute;right:0;top:18px;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;transition:transform .3s, border-color .2s}
+.sec-head .tog::before,.sec-head .tog::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:2px;background:var(--ink);transform:translate(-50%,-50%)}
+.sec-head .tog::after{transform:translate(-50%,-50%) rotate(90deg);transition:transform .3s}
+.sec-head[aria-expanded="true"] .tog::after{transform:translate(-50%,-50%) rotate(0deg)}
+.sec-head:hover .tog{border-color:var(--ink)}
+.sec-body{display:grid;grid-template-rows:1fr;transition:grid-template-rows .35s ease}
+.sec-in{overflow:hidden;min-height:0;display:grid;gap:22px;padding-top:22px}
+section.shut .sec-body{grid-template-rows:0fr}
+section.shut .sec-in{padding-top:0;visibility:hidden;transition:visibility 0s .35s}
+main .wrap{gap:28px !important}
+.foldbar{display:flex;gap:8px;justify-content:flex-end}
+.foldbar button{font:inherit;font-size:12px;font-weight:700;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.foldbar button:hover,.foldbar button:focus-visible{border-color:var(--ink);outline:none}
+/* Чек-лист */
+.check{display:grid;gap:14px}
+.check__bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.check__count{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.check__track{flex:1 1 200px;height:8px;border-radius:99px;background:var(--surface);overflow:hidden}
+.check__track i{display:block;height:100%;width:0;background:var(--ink);transition:width .4s ease}
+.check__list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.chk{display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.chk:hover{border-color:var(--ink)}
+.chk input{appearance:none;-webkit-appearance:none;width:22px;height:22px;margin:0;border:1.5px solid var(--ink);border-radius:6px;display:grid;place-items:center;cursor:pointer;background:var(--bg)}
+.chk input::after{content:"";width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);transition:transform .2s;margin-top:-2px}
+.chk input:checked{background:var(--accent);border-color:var(--ink)}
+.chk input:checked::after{transform:rotate(45deg) scale(1)}
+.chk input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.chk:has(input:checked){background:var(--surface)}
+.chk:has(input:checked) span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.check__done{font-weight:800;background:var(--accent);color:var(--on-accent);border-radius:10px;padding:12px 16px;animation:rpin .4s ease}
+@media (prefers-reduced-motion:reduce){.sec-body,.sec-head .tog,.sec-head .tog::after,.check__track i{transition:none}}
+
+/* Плотнее */
+body{line-height:1.45}
+header .wrap{padding-block:26px 22px;gap:8px}
+nav .wrap{padding-block:6px}
+main .wrap{padding-block:20px 40px;gap:14px !important}
+.sec-head{padding-top:10px;gap:4px}
+.sec-in{gap:14px;padding-top:12px}
+section{scroll-margin-top:48px}
+.sub{gap:8px}
+ul,ol{gap:4px}
+th,td{padding:7px 12px}
+.passport{gap:18px}
+.passport ol{gap:6px}
+.fix div{padding:10px 14px}
+.cards3,.regions,.hints{gap:10px}
+.card{padding:12px;gap:6px}
+.regions div{padding:10px 12px}
+.hints div{padding:8px 12px}
+.result{padding:10px 14px}
+.qa{gap:8px}
+.qa-item{padding:8px}
+.qa-item textarea{min-height:52px;padding:8px 10px}
+.rpanels{padding:16px}
+.rp{gap:14px}
+.rp__grid{gap:14px}
+.rp__know{padding:12px 14px}
+.rp__form{gap:10px}
+.fld input,.fld textarea,.acts input{padding:7px 10px}
+.fcard{padding:10px 14px;row-gap:8px}
+.fcards{gap:10px}
+.chk{padding:8px 12px}
+.check{gap:10px}
+.qa-add{padding:7px 12px}
+.foldbar{margin-bottom:-4px}
+
+.pres{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;text-decoration:none;color:var(--head-fg);background:var(--head-bg);border-radius:12px;padding:16px 20px;transition:transform .2s, box-shadow .2s}
+.pres:hover,.pres:focus-visible{transform:translateY(-2px);box-shadow:0 10px 24px rgba(36,37,37,.18);outline:none}
+.pres__l{display:grid;gap:2px;min-width:0}
+.pres__l .eyebrow{color:var(--head-muted)}
+.pres__l b{font-size:18px}
+.pres__d{font-size:13px;color:var(--head-muted)}
+.pres__go{font-weight:800;font-size:14px;background:var(--accent);color:var(--on-accent);border-radius:8px;padding:8px 14px;white-space:nowrap}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">КопСервис · сценарий сессии</div>
+    <h1>Стратегическая сессия № 4 — <mark>завершающая</mark></h1>
+    <div class="meta"><span>3 часа</span><span>7 блоков + перерыв</span><span>Эксперты: Ирина, Нина</span></div>
+  </div>
+</header>
+
+<nav aria-label="Блоки сессии">
+  <div class="wrap">
+    <a href="#passport">Паспорт</a>
+    <a href="#b1">1. Открытие</a>
+    <a href="#b2">2. Что прошли</a>
+    <a href="#b3">3. Оргструктура</a>
+    <a href="#b4">4. Продажи</a>
+    <a href="#regions">5. Регионы</a>
+    <a href="#b5">6. Карточки функций</a>
+    <a href="#b7">7. Закрытие</a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+<div class="foldbar"><button type="button" id="fold-all">Свернуть всё</button><button type="button" id="open-all">Развернуть всё</button></div>
+
+<section id="passport">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-passport"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Паспорт сессии</div><h2>Цель</h2></div>
+  <div class="sec-body" id="body-passport"><div class="sec-in">
+  <p class="task">Закрыть стратегический этап: собрать оргструктуру и дорожную карту с вехами.</p>
+  <div class="passport">
+    <div class="sub">
+      <h3>Итоговые результаты</h3>
+      <ol>
+        <li>Итоги трёх сессий и инструмент решений по регионам</li>
+        <li>Оргструктура как рабочая версия</li>
+        <li>Тактика по ключевым приоритетным регионам</li>
+        <li>Функциональная поддержка продаж</li>
+        <li>Карточки функций заполнены и защищены</li>
+        
+      </ol>
+    </div>
+    <div class="fix">
+      <div><span class="eyebrow">Не меняется</span><p>3 млн голов к 2030 году</p></div>
+    </div>
+  </div>
+  </div></div>
+</section>
+
+<section id="b1">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-b1"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 1</div><h2>Открытие</h2>
+    <div class="facts"><span><b>Время:</b> 10 минут</span></div></div>
+  <div class="sec-body" id="body-b1"><div class="sec-in">
+  <p class="task"><b>Задача:</b> задать рамку завершения: сегодня мы не начинаем заново, а собираем результат и берём обязательства.</p>
+  </div></div>
+</section>
+
+<section id="b2">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-b2"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 2</div><h2>Что мы прошли за три сессии</h2>
+    <div class="facts"><span><b>Время:</b> 15 минут</span></div></div>
+  <div class="sec-body" id="body-b2"><div class="sec-in">
+  <a class="pres" href="https://dawira2110-hash.github.io/kopservice-session/" target="_blank" rel="noopener">
+    <span class="pres__l"><span class="eyebrow">Презентация</span><b>Что мы прошли за три сессии</b><span class="pres__d">Путь, ключевые решения по сессиям, модели и функции центра, методика выбора региона</span></span>
+    <span class="pres__go" aria-hidden="true">Открыть →</span>
+  </a>
+
+  </div></div>
+</section>
+
+<section id="b3">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-b3"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 3</div><h2>Оргструктура как драфт</h2>
+    <div class="facts"><span><b>Время:</b> 40 минут</span></div></div>
+  <div class="sec-body" id="body-b3"><div class="sec-in">
+  <p class="task"><b>Задача:</b> принять драфт как рабочую версию.</p>
+  <div class="sub">
+    <h3>Обсуждение</h3>
+    <div class="qa" id="qa"></div>
+    <button type="button" class="qa-add" id="qa-add"><span aria-hidden="true">+</span> Добавить вопрос</button>
+  </div>
+  </div></div>
+</section>
+
+<section id="b4">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-b4"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 4</div><h2>Без продаж нет сети</h2>
+    <div class="facts"><span><b>Время:</b> 10 минут</span></div></div>
+  <div class="sec-body" id="body-b4"><div class="sec-in">
+  <div class="sub">
+    <h3>Где зарабатываем</h3>
+    <div class="regions">
+      <div><span class="eyebrow">Приоритетные регионы</span><b>Беларусь, Казахстан, Удмуртия</b><p>Здесь нужен крупный партнёр или крупные хозяйства.</p></div>
+      <div><span class="eyebrow">Пилотные территории</span><b>Ярославская и соседние области, Ленинградская и др.</b><p>Здесь отрабатываем другие форматы.</p></div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>Три направления продаж стартуют одновременно</h3>
+    <p class="note">Услуга одна, различаются формат и коммерческие условия.</p>
+    <div class="cards3">
+      <div class="card"><span class="eyebrow">Направление 1</span><h4>Крупные хозяйства и партнёры</h4><p>Выход на крупные хозяйства и холдинги в приоритетных регионах</p><p class="need">Описать для отдела продаж: условия, финмодель, договор</p></div>
+      <div class="card"><span class="eyebrow">Направление 2</span><h4>Мастера-партнёры</h4><p>Мастера переходят под флаг КС, едут в регион или становятся партнёрами</p><p class="need">Описать для отдела продаж: условия партнёрства, экономика партнёра, договор и защита технологии</p></div>
+      <div class="card"><span class="eyebrow">Направление 3</span><h4>Ортопедическое место</h4><p>Хозяйство ставит у себя станок: обучение, сопровождение, аттестация</p><p class="need">Описать для отдела продаж: что получает хозяйство, стоимость, договор</p></div>
+    </div>
+  </div>
+
+
+  </div></div>
+</section>
+
+
+<section id="regions">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-regions"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 5</div><h2>Тактика по приоритетным регионам</h2>
+    <div class="facts"><span><b>Время:</b> 35 минут</span></div></div>
+  <div class="sec-body" id="body-regions"><div class="sec-in">
+  <p class="task"><b>Задача:</b> по каждому региону назначить ответственного, подтвердить стратегию, определить ближайшие шаги и сроки.</p>
+  <div class="rtabs" role="tablist" aria-label="Регионы"><button type="button" class="rtab" role="tab" id="tab-kz" aria-controls="rp-kz" aria-selected="true" data-r="kz"><span class="rtab__n">Казахстан</span><i class="rtab__dot" aria-hidden="true"></i></button><button type="button" class="rtab" role="tab" id="tab-ud" aria-controls="rp-ud" aria-selected="false" data-r="ud"><span class="rtab__n">Удмуртия</span><i class="rtab__dot" aria-hidden="true"></i></button><button type="button" class="rtab" role="tab" id="tab-by" aria-controls="rp-by" aria-selected="false" data-r="by"><span class="rtab__n">Беларусь</span><i class="rtab__dot" aria-hidden="true"></i></button><button type="button" class="rtab" role="tab" id="tab-ur" aria-controls="rp-ur" aria-selected="false" data-r="ur"><span class="rtab__n">Урал</span><i class="rtab__dot" aria-hidden="true"></i></button><button type="button" class="rtab" role="tab" id="tab-x5" aria-controls="rp-x5" aria-selected="false" data-r="x5"><span class="rtab__n">Пятое направление</span><i class="rtab__dot" aria-hidden="true"></i></button></div>
+  <div class="rpanels">
+    <div class="rp" role="tabpanel" id="rp-kz" aria-labelledby="tab-kz">
+      <div class="rp__head"><div><div class="eyebrow">Приоритетный регион</div><h3 class="rp__name">Казахстан</h3></div><span class="rchip">Пилотный регион · проект</span></div>
+      <div class="rp__grid">
+        <div class="rp__know"><div class="eyebrow">Что мы знаем из прошлых сессий</div><ul><li><b>Июль</b><span>Пилот с Минсельхозом, площадки обучения</span></li><li><b>Сессия 2</b><span>Тип — пилотный регион, решение — проект</span></li><li><b>Сессия 3</b><span>Ортопедические места для трёх холдингов, бригады из Ярославля, затем абонентское обслуживание. Упоминались «Родина» и Зинченко</span></li><li><b>Последние данные</b><span>Контракт на аудит «Родины», представитель Степан, привлечены два хозяйства — уточнить статус</span></li></ul></div>
+        <div class="rp__form">
+          <label class="fld"><span>Ответственный за развитие продаж</span><input id="kz-owner" data-k="kz-owner" placeholder="Имя, роль"></label>
+          <label class="fld"><span>Выбранная стратегия</span><textarea id="kz-strategy" data-k="kz-strategy" rows="3">Ортопедические места у холдингов + выездные бригады из Ярославля, затем абонентское обслуживание</textarea></label>
+          <label class="fld"><span>Хозяйство / партнёр</span><textarea id="kz-partner" data-k="kz-partner" rows="2">«Родина»; ещё два хозяйства — уточнить</textarea></label>
+        </div>
+      </div>
+      <div class="acts"><div class="acts__t">Ближайшие шаги для развития продаж</div><div class="acts__h"><span>Шаг</span><span>Срок</span><span></span></div><div class="acts__list" data-r="kz"></div>
+        <button type="button" class="qa-add acts__add" data-r="kz"><span aria-hidden="true">+</span> Добавить действие</button></div>
+      <label class="fld fld--big"><span>Необходимые ресурсы</span><textarea id="kz-res" data-k="kz-res" rows="4" placeholder="Люди, мастера, оборудование, бюджет, поддержка центра"></textarea></label>
+    </div>
+    <div class="rp" role="tabpanel" id="rp-ud" aria-labelledby="tab-ud" hidden>
+      <div class="rp__head"><div><div class="eyebrow">Приоритетный регион</div><h3 class="rp__name">Удмуртия</h3></div><span class="rchip">Стратегический рынок · в проработке</span></div>
+      <div class="rp__grid">
+        <div class="rp__know"><div class="eyebrow">Что мы знаем из прошлых сессий</div><ul><li><b>Сессия 1</b><span>Ижевск — в приоритете первого анализа: молодое население, структура собственников, логистика. Идея мини-учебного центра</span></li><li><b>Сессия 2</b><span>Тип — стратегический рынок, решение — берём в проработку</span></li><li><b>Сессия 3</b><span>Шесть клиентов, холдинги, кадровый и GR-ресурс. Работает франшиза — обсуждали перевод в собственное управление и сотрудничество с «Комус групп»</span></li><li><b>Связка</b><span>Татарстан (команда под холдинг «КОМУС») и Башкортостан («БАЗЫ») могут вестись из удмуртского подразделения</span></li></ul></div>
+        <div class="rp__form">
+          <label class="fld"><span>Ответственный за развитие продаж</span><input id="ud-owner" data-k="ud-owner" placeholder="Имя, роль"></label>
+          <label class="fld"><span>Выбранная стратегия</span><textarea id="ud-strategy" data-k="ud-strategy" rows="3">Целевая модель — собственное присутствие. Старт: местный продавец, услуги — выездные бригады; затем местные мастера</textarea></label>
+          <label class="fld"><span>Хозяйство / партнёр</span><textarea id="ud-partner" data-k="ud-partner" rows="2">Действующий франчайзи; «Комус групп»</textarea></label>
+        </div>
+      </div>
+      <div class="acts"><div class="acts__t">Ближайшие шаги для развития продаж</div><div class="acts__h"><span>Шаг</span><span>Срок</span><span></span></div><div class="acts__list" data-r="ud"></div>
+        <button type="button" class="qa-add acts__add" data-r="ud"><span aria-hidden="true">+</span> Добавить действие</button></div>
+      <label class="fld fld--big"><span>Необходимые ресурсы</span><textarea id="ud-res" data-k="ud-res" rows="4" placeholder="Люди, мастера, оборудование, бюджет, поддержка центра"></textarea></label>
+    </div>
+    <div class="rp" role="tabpanel" id="rp-by" aria-labelledby="tab-by" hidden>
+      <div class="rp__head"><div><div class="eyebrow">Приоритетный регион</div><h3 class="rp__name">Беларусь</h3></div><span class="rchip">Стратегический рынок · проект</span></div>
+      <div class="rp__grid">
+        <div class="rp__know"><div class="eyebrow">Что мы знаем из прошлых сессий</div><ul><li><b>Сессия 1</b><span>Брестская область в списке для оценки; мастера-партнёры; «Савушкин продукт» — кейс для обоснования ортопедической службы</span></li><li><b>Сессия 2</b><span>Тип — стратегический рынок, решение — проект</span></li><li><b>Сессия 3</b><span>Расширение работы с «Савушкиным продуктом», выбор между филиалом и партнёрством, работа с органами власти. Ориентир 300 тыс. голов — уточнить период</span></li><li><b>Открыто</b><span>Результаты переговоров ожидались после 15.10 — уточнить</span></li></ul></div>
+        <div class="rp__form">
+          <label class="fld"><span>Ответственный за развитие продаж</span><input id="by-owner" data-k="by-owner" placeholder="Имя, роль"></label>
+          <label class="fld"><span>Выбранная стратегия</span><textarea id="by-strategy" data-k="by-strategy" rows="3">Филиал или партнёрство — по итогам переговоров</textarea></label>
+          <label class="fld"><span>Хозяйство / партнёр</span><textarea id="by-partner" data-k="by-partner" rows="2">«Савушкин продукт»</textarea></label>
+        </div>
+      </div>
+      <div class="acts"><div class="acts__t">Ближайшие шаги для развития продаж</div><div class="acts__h"><span>Шаг</span><span>Срок</span><span></span></div><div class="acts__list" data-r="by"></div>
+        <button type="button" class="qa-add acts__add" data-r="by"><span aria-hidden="true">+</span> Добавить действие</button></div>
+      <label class="fld fld--big"><span>Необходимые ресурсы</span><textarea id="by-res" data-k="by-res" rows="4" placeholder="Люди, мастера, оборудование, бюджет, поддержка центра"></textarea></label>
+    </div>
+    <div class="rp" role="tabpanel" id="rp-ur" aria-labelledby="tab-ur" hidden>
+      <div class="rp__head"><div><div class="eyebrow">Приоритетный регион</div><h3 class="rp__name">Урал</h3></div><span class="rchip">Тюмень · Свердловская · Омская</span></div>
+      <div class="rp__grid">
+        <div class="rp__know"><div class="eyebrow">Что мы знаем из прошлых сессий</div><ul><li><b>Сессия 1</b><span>Тюмень — в приоритете первого анализа; идея мини-учебного центра</span></li><li><b>Сессия 2</b><span>Тюменская и Свердловская — развитие присутствия, в проработке; Омская — пилотный регион, нужна информация</span></li><li><b>Сессия 3</b><span>Тюмень: бригада под холдинг, представитель, местные мастера-партнёры. Свердловская: представитель и мастера-партнёры. Омская: холдинг, ортопедический пост, обучение, сопровождение</span></li><li><b>Открыто</b><span>Как управлять связкой Тюмень — Омск — Екатеринбург</span></li></ul></div>
+        <div class="rp__form">
+          <label class="fld"><span>Ответственный за развитие продаж</span><input id="ur-owner" data-k="ur-owner" placeholder="Имя, роль"></label>
+          <label class="fld"><span>Выбранная стратегия</span><textarea id="ur-strategy" data-k="ur-strategy" rows="3">Представитель по продажам + местные мастера-партнёры; бригада под холдинг в Тюмени; ортопедический пост в Омске</textarea></label>
+          <label class="fld"><span>Хозяйство / партнёр</span><textarea id="ur-partner" data-k="ur-partner" rows="2">Холдинг для переговоров — выбрать</textarea></label>
+        </div>
+      </div>
+      <div class="acts"><div class="acts__t">Ближайшие шаги для развития продаж</div><div class="acts__h"><span>Шаг</span><span>Срок</span><span></span></div><div class="acts__list" data-r="ur"></div>
+        <button type="button" class="qa-add acts__add" data-r="ur"><span aria-hidden="true">+</span> Добавить действие</button></div>
+      <label class="fld fld--big"><span>Необходимые ресурсы</span><textarea id="ur-res" data-k="ur-res" rows="4" placeholder="Люди, мастера, оборудование, бюджет, поддержка центра"></textarea></label>
+    </div>
+    <div class="rp" role="tabpanel" id="rp-x5" aria-labelledby="tab-x5" hidden>
+      <div class="rp__head"><div><div class="eyebrow">Приоритетный регион</div><input class="rname" id="x5-name" data-k="x5-name" value="Пятое направление" aria-label="Название направления"></div><span class="rchip">Новое направление</span></div>
+      <div class="rp__grid">
+        <div class="rp__know"><div class="eyebrow">Что мы знаем из прошлых сессий</div><ul><li><span>Добавьте направление, если на сессии появится ещё один приоритет</span></li></ul></div>
+        <div class="rp__form">
+          <label class="fld"><span>Ответственный за развитие продаж</span><input id="x5-owner" data-k="x5-owner" placeholder="Имя, роль"></label>
+          <label class="fld"><span>Выбранная стратегия</span><textarea id="x5-strategy" data-k="x5-strategy" rows="3"></textarea></label>
+          <label class="fld"><span>Хозяйство / партнёр</span><textarea id="x5-partner" data-k="x5-partner" rows="2"></textarea></label>
+        </div>
+      </div>
+      <div class="acts"><div class="acts__t">Ближайшие шаги для развития продаж</div><div class="acts__h"><span>Шаг</span><span>Срок</span><span></span></div><div class="acts__list" data-r="x5"></div>
+        <button type="button" class="qa-add acts__add" data-r="x5"><span aria-hidden="true">+</span> Добавить действие</button></div>
+      <label class="fld fld--big"><span>Необходимые ресурсы</span><textarea id="x5-res" data-k="x5-res" rows="4" placeholder="Люди, мастера, оборудование, бюджет, поддержка центра"></textarea></label>
+    </div>
+  </div>
+  </div></div>
+</section>
+
+<div class="brkband">Перерыв · 15 минут</div>
+
+<section id="b5">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-b5"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 6</div><h2>Карточки функций</h2>
+    <div class="facts"><span><b>Время:</b> 45 минут</span></div></div>
+  <div class="sec-body" id="body-b5"><div class="sec-in">
+  <p class="task"><b>Задача:</b> каждая функция берёт обязательства на ближайшие месяцы, в первую очередь в поддержку продаж.</p>
+
+  <div class="sub">
+    <h3>6.1. Карточка функции <span class="t">· 25 мин</span></h3>
+    <p>Каждая функция добавляет свою карточку и заполняет её. Карточки общие: все участники видят их сразу, по одной ссылке.</p>
+    <p class="fc-status" id="fc-status" role="status">Загружаем карточки…</p>
+    <div class="fcards" id="fcards"></div>
+    <button type="button" class="qa-add" id="fc-add" hidden><span aria-hidden="true">+</span> Добавить карточку функции</button>
+    <p><b>Примеры: как функция может поддержать продажи</b></p>
+    <div class="hints">
+      <div><b>Региональная служба</b>Как построить службу в регионах разного типа.</div>
+      <div><b>Мастера и технологи</b>Количество мастеров и координация технологов; участие в переговорах с будущими партнёрами из числа текущих мастеров.</div>
+      <div><b>Учебный центр</b>Подготовка для партнёров и обучение собственников и директоров хозяйств.</div>
+      <div><b>Маркетинг</b>Упаковка условий по трём направлениям.</div>
+      <div><b>Финансы</b>Финмодель партнёра и ортопедического места, калькулятор для переговоров.</div>
+      <div><b>Юристы</b>Договоры с партнёрами, защита технологии.</div>
+      <div><b>HR</b>Найм под рост, кандидаты в партнёры.</div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>6.2. Защита карточек <span class="t">· 20 мин</span></h3>
+    <p>По 2–3 минуты на функцию. Проверочные вопросы:</p>
+    <ul>
+      <li>Это шаг или пожелание? Какой результат можно будет проверить?</li>
+      <li>Что из этого помогает продажам в первые 3 месяца?</li>
+      <li>Кто ещё должен сделать что-то, чтобы ваш шаг получился?</li>
+    </ul>
+  </div>
+  <p class="result"><b>Результат блока.</b> У каждой функции есть обязательства на 1 и 3 месяца и образ через год.</p>
+  </div></div>
+</section>
+
+<section id="b7">
+  <div class="sec-head" role="button" tabindex="0" aria-expanded="true" aria-controls="body-b7"><span class="tog" aria-hidden="true"></span><div class="eyebrow">Блок 7</div><h2>Закрытие: достигли ли мы цели</h2>
+    <div class="facts"><span><b>Время:</b> 10 минут</span></div></div>
+  <div class="sec-body" id="body-b7"><div class="sec-in">
+  <div class="check">
+    <div class="check__bar"><span class="check__count" id="chk-count">Отмечено 0 из 5</span><span class="check__track"><i id="chk-fill"></i></span></div>
+    <ul class="check__list"><li><label class="chk"><input type="checkbox" id="chk-0" data-i="0"><span>Показали итоги трёх сессий</span></label></li><li><label class="chk"><input type="checkbox" id="chk-1" data-i="1"><span>Приняли оргструктуру как рабочую версию</span></label></li><li><label class="chk"><input type="checkbox" id="chk-2" data-i="2"><span>По приоритетным регионам назначены ответственные, шаги и сроки</span></label></li><li><label class="chk"><input type="checkbox" id="chk-3" data-i="3"><span>Каждая функция заполнила карточку поддержки продаж</span></label></li><li><label class="chk"><input type="checkbox" id="chk-4" data-i="4"><span>Договорились о следующем шаге</span></label></li></ul>
+    <p class="check__done" id="chk-done" hidden>Все пункты пройдены. Стратегический этап закрыт.</p>
+  </div>
+  </div></div>
+</section>
+
+</div>
+</main>
+
+<footer><div class="wrap">JTBD · консалтинговое агентство · КопСервис, стратегическая сессия № 4</div></footer>
+
+<script>
+(function(){
+  var KEY='kopservice-s4-qa', box=document.getElementById('qa'), add=document.getElementById('qa-add');
+  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'null');if(Array.isArray(v)&&v.length)return v}catch(e){}return [{q:'',a:''}]}
+  function save(){var d=[].map.call(box.querySelectorAll('.qa-item'),function(it){var ta=it.querySelectorAll('textarea');return{q:ta[0].value,a:ta[1].value}});try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+  var n=0;
+  function item(d,focus){
+    n++; var el=document.createElement('div'); el.className='qa-item';
+    el.innerHTML='<label for="qa-q'+n+'"><textarea id="qa-q'+n+'" rows="2" placeholder="Вопрос"></textarea></label>'+
+      '<label for="qa-a'+n+'"><textarea id="qa-a'+n+'" rows="2" placeholder="Ответ"></textarea></label>'+
+      '<button type="button" class="qa-del" aria-label="Удалить вопрос">×</button>';
+    var ta=el.querySelectorAll('textarea'); ta[0].value=d.q||''; ta[1].value=d.a||'';
+    el.addEventListener('input',save);
+    el.querySelector('.qa-del').addEventListener('click',function(){
+      if(box.children.length===1){ta[0].value='';ta[1].value='';}else el.remove(); save();
+    });
+    box.appendChild(el); if(focus)ta[0].focus();
+  }
+  load().forEach(function(d){item(d)});
+  add.addEventListener('click',function(){item({q:'',a:''},true);save()});
+})();
+</script>
+
+<script>
+(function(){
+  var KEY='kopservice-s4-regions', st={};
+  try{st=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){st={}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+  document.querySelectorAll('#regions [data-k]').forEach(function(el){
+    var k=el.dataset.k; if(k in st) el.value=st[k];
+    el.addEventListener('input',function(){st[k]=el.value;save();mark();});
+  });
+  var tabs=[].slice.call(document.querySelectorAll('.rtab'));
+  function sel(id,focus){tabs.forEach(function(b){var on=b.dataset.r===id;b.setAttribute('aria-selected',on?'true':'false');b.tabIndex=on?0:-1;document.getElementById('rp-'+b.dataset.r).hidden=!on;if(on&&focus)b.focus();});}
+  tabs.forEach(function(b,i){
+    b.addEventListener('click',function(){sel(b.dataset.r)});
+    b.addEventListener('keydown',function(e){var d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;e.preventDefault();sel(tabs[(i+d+tabs.length)%tabs.length].dataset.r,true);});
+  });
+  var nameIn=document.getElementById('x5-name');
+  function syncName(){var b=document.querySelector('#tab-x5 .rtab__n');if(b&&nameIn)b.textContent=nameIn.value.trim()||'Пятое направление';}
+  if(nameIn){nameIn.addEventListener('input',syncName);syncName();}
+  function mark(){tabs.forEach(function(b){var r=b.dataset.r,o=document.getElementById(r+'-owner');b.classList.toggle('filled',!!(o&&o.value.trim()));});}
+  var n=0;
+  function row(list,d,focus){
+    n++; var r=list.dataset.r, el=document.createElement('div'); el.className='act';
+    el.innerHTML='<input type="text" id="act-'+n+'" aria-label="Действие" placeholder="Что делаем">'+
+      '<input type="text" id="actd-'+n+'" aria-label="Срок" placeholder="Срок">'+
+      '<button type="button" class="qa-del" aria-label="Удалить действие">×</button>';
+    var ins=el.querySelectorAll('input'); ins[0].value=d.a||''; ins[1].value=d.d||'';
+    el.addEventListener('input',function(){collect(list)});
+    el.querySelector('.qa-del').addEventListener('click',function(){if(list.children.length===1){ins[0].value='';ins[1].value='';}else el.remove();collect(list);});
+    list.appendChild(el); if(focus)ins[0].focus();
+  }
+  function collect(list){st['acts-'+list.dataset.r]=[].map.call(list.querySelectorAll('.act'),function(a){var i=a.querySelectorAll('input');return{a:i[0].value,d:i[1].value}});save();}
+  document.querySelectorAll('.acts__list').forEach(function(list){
+    var saved=st['acts-'+list.dataset.r]; (Array.isArray(saved)&&saved.length?saved:[{},{},{}]).forEach(function(d){row(list,d)});
+  });
+  document.querySelectorAll('.acts__add').forEach(function(b){b.addEventListener('click',function(){var l=document.querySelector('.acts__list[data-r="'+b.dataset.r+'"]');row(l,{},true);collect(l);});});
+  mark();
+})();
+</script>
+
+<script>
+(function(){
+  var PAGE='https://claude.ai/artifact/Y8KArQf4P2Lxqf1RRdsXYy';
+  var F=[['sales','Как моя функция будет поддерживать продажи','Что я даю, чтобы у тех, кто продаёт, выросли шансы продать',3],
+         ['q1','Ближайшие шаги на первый квартал','2–3 шага с результатом и сроком',3],
+         ['deps','От кого завишу','Стыки с другими функциями',3]];
+  var box=document.getElementById('fcards'), add=document.getElementById('fc-add'), status=document.getElementById('fc-status');
+  var cards={}, canWrite=true, col=null, hashDone=false;
+  function setStatus(s){status.textContent=s||''}
+  function progress(el){var n=0,A=F.concat([['owner']]);A.forEach(function(f){if(el.querySelector('[data-f="'+f[0]+'"]').value.trim())n++});var p=el.querySelector('.fcard__prog');p.textContent=n+' из '+A.length+' полей';p.classList.toggle('done',n===A.length);}
+  function build(id){
+    var el=document.createElement('article'); el.className='fcard'; el.id='c-'+id;
+    var h='<div class="fcard__top"><input class="fcard__title" data-f="title" id="ft-'+id+'" aria-label="Название функции" placeholder="Название функции"><input class="fcard__owner" data-f="owner" id="fo-'+id+'" aria-label="Ответственный" placeholder="Ответственный"><span class="fcard__prog"></span></div>';
+    F.forEach(function(f){h+='<label class="fld"><span>'+f[1]+'</span>'+(f[3]>1?'<textarea id="f'+f[0]+'-'+id+'" data-f="'+f[0]+'" rows="'+f[3]+'" placeholder="'+f[2]+'"></textarea>':'<input id="f'+f[0]+'-'+id+'" data-f="'+f[0]+'" placeholder="'+f[2]+'">')+'</label>'});
+    h+='<div class="fcard__foot"><span class="fcard__saved" aria-live="polite"></span><span><button type="button" class="fbtn fbtn--danger" data-act="del">Удалить</button></span></div>';
+    el.innerHTML=h;
+    var ref=col.doc(id), timer=null, pending={}, busy=false, saved=el.querySelector('.fcard__saved');
+    function flush(){if(busy||!Object.keys(pending).length)return;var d=pending;pending={};busy=true;saved.textContent='Сохраняем…';
+      d.updatedAt=Date.now();
+      ref.update(d).then(function(){saved.textContent='Сохранено'}).catch(function(e){saved.textContent=(e&&e.code==='invalid_argument')?'Нет прав на запись':'Не сохранилось, попробуйте ещё раз';if(e&&e.code==='invalid_argument')readonly();}).then(function(){busy=false;if(Object.keys(pending).length)flush();});}
+    el.addEventListener('input',function(e){var f=e.target.dataset.f;if(!f)return;pending[f]=e.target.value;progress(el);saved.textContent='';clearTimeout(timer);timer=setTimeout(flush,700);});
+    el.addEventListener('focusout',function(){clearTimeout(timer);flush();});
+    var delArmed=false;
+    el.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b)return;
+      if(b.dataset.act==='link'){var url=PAGE+'#c-'+id;var done=function(){b.textContent='Ссылка скопирована';setTimeout(function(){b.textContent='Скопировать ссылку'},1800)};
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done,function(){saved.textContent=url})}else saved.textContent=url;}
+      if(b.dataset.act==='del'){if(!delArmed){delArmed=true;b.textContent='Точно удалить?';setTimeout(function(){delArmed=false;b.textContent='Удалить'},3000);return;}
+        ref.delete().catch(function(){saved.textContent='Не удалось удалить'});}
+    });
+    box.appendChild(el); return el;
+  }
+  function fill(el,d){[['title'],['owner']].concat(F).forEach(function(f){var i=el.querySelector('[data-f="'+f[0]+'"]');if(document.activeElement!==i){var v=d[f[0]]||'';if(i.value!==v)i.value=v;}});progress(el);}
+  function readonly(){canWrite=false;add.hidden=true;box.querySelectorAll('.fcard').forEach(function(c){c.setAttribute('data-ro','');c.querySelectorAll('input,textarea').forEach(function(i){i.readOnly=true});c.querySelectorAll('[data-act="del"]').forEach(function(b){b.hidden=true})});setStatus('Карточки доступны только для просмотра.');}
+  function jump(){if(hashDone)return;var h=location.hash.slice(1);if(!/^c-/.test(h))return;var el=document.getElementById(h);if(!el)return;hashDone=true;el.scrollIntoView({block:'center'});el.classList.add('hit');setTimeout(function(){el.classList.remove('hit')},2500);var t=el.querySelector('.fcard__title');if(t&&canWrite)t.focus({preventScroll:true});}
+
+  function localDb(){
+    var KEY='kopservice-s4-cards', data={}, subs=[];
+    try{data=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){data={}}
+    function snap(){var docs=Object.keys(data).map(function(id){var d=data[id];return{id:id,exists:true,data:function(){return d},metadata:{fromCache:false,hasPendingWrites:false}}}).sort(function(x,y){return (x.data().createdAt||0)-(y.data().createdAt||0)});return{docs:docs,size:docs.length,empty:!docs.length,metadata:{fromCache:false,hasPendingWrites:false}}}
+    function emit(){var s=snap();subs.forEach(function(f){f(s)})}
+    function persist(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}emit();return Promise.resolve();}
+    var col={orderBy:function(){return col},onSnapshot:function(f){subs.push(f);setTimeout(function(){f(snap())},0);return function(){}},
+      doc:function(id){id=id||('c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7));return{id:id,
+        set:function(b){data[id]=Object.assign({},b);return persist()},
+        update:function(b){data[id]=Object.assign({},data[id]||{},b);return persist()},
+        delete:function(){delete data[id];return persist()}}}};
+    return{collection:function(){return col}};
+  }
+  function start(db,user){
+    if(!db){db=localDb();user=null;}
+    col=db.collection('cards');
+    var loading=setTimeout(function(){setStatus('Карточки пока не загрузились. Проверьте соединение.')},10000);
+    col.orderBy('createdAt').onSnapshot(function(snap){
+      if(!snap.metadata.fromCache){clearTimeout(loading);}
+      var seen={};
+      snap.docs.forEach(function(d){seen[d.id]=1;var el=cards[d.id]||(cards[d.id]=build(d.id));fill(el,d.data()||{});});
+      Object.keys(cards).forEach(function(id){if(!seen[id]){cards[id].remove();delete cards[id];}});
+      snap.docs.forEach(function(d){box.appendChild(cards[d.id])});
+      if(!snap.metadata.fromCache)setStatus(snap.empty?(canWrite?'Пока нет ни одной карточки. Добавьте первую.':'Пока нет ни одной карточки.'):(canWrite?'':'Карточки доступны только для просмотра.'));
+      if(!canWrite)readonly();
+      jump();
+    },function(e){clearTimeout(loading);setStatus(e&&e.code==='revoked'?'':'Карточки сейчас недоступны.');});
+    var p=user&&user.can?user.can('data.write'):null;
+    Promise.resolve(p).then(function(w){if(w===false){readonly();}else{add.hidden=false;}});
+    add.addEventListener('click',function(){add.disabled=true;var ref=col.doc();
+      var body={title:'',createdAt:Date.now(),updatedAt:Date.now()};F.forEach(function(f){body[f[0]]=''});
+      ref.set(body).then(function(){var el=cards[ref.id];if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.querySelector('.fcard__title').focus({preventScroll:true});}})
+        .catch(function(e){setStatus(e&&e.code==='quota_exceeded'?'Достигнут лимит карточек.':(e&&e.code==='invalid_argument'?'У вас нет прав добавлять карточки.':'Не получилось добавить карточку, попробуйте ещё раз.'));if(e&&e.code==='invalid_argument')readonly();})
+        .then(function(){add.disabled=false});});
+  }
+  var c=window.claude;
+  if(!c||!c.use){start(null);return;}
+  Promise.all([c.use('db'),c.use('user')]).then(function(r){start(r[0],r[1])},function(){start(null)});
+})();
+</script>
+
+<script>
+(function(){
+  var KEY='kopservice-s4-fold', st={};
+  try{st=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+  var secs=[].slice.call(document.querySelectorAll('main section'));
+  function set(sec,open){var h=sec.querySelector('.sec-head');sec.classList.add('fold');sec.classList.toggle('shut',!open);h.setAttribute('aria-expanded',open?'true':'false');st[sec.id]=open;}
+  secs.forEach(function(sec){
+    var h=sec.querySelector('.sec-head[role="button"]'); if(!h)return;
+    set(sec, st[sec.id]!==false);
+    function toggle(e){if(e.target.closest('a,button,input,textarea'))return;set(sec,sec.classList.contains('shut'));save();}
+    h.addEventListener('click',toggle);
+    h.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(e);}});
+  });
+  document.getElementById('fold-all').addEventListener('click',function(){secs.forEach(function(s){set(s,false)});save();});
+  document.getElementById('open-all').addEventListener('click',function(){secs.forEach(function(s){set(s,true)});save();});
+  document.querySelectorAll('nav a[href^="#"]').forEach(function(a){a.addEventListener('click',function(){var s=document.getElementById(a.getAttribute('href').slice(1));if(s&&s.classList.contains('shut')){set(s,true);save();}});});
+  var h=location.hash.slice(1); if(h){var s=document.getElementById(h); if(s&&s.tagName==='SECTION')set(s,true);}
+
+  var CK='kopservice-s4-check5', ck={};
+  try{ck=JSON.parse(localStorage.getItem(CK)||'{}')||{}}catch(e){}
+  var boxes=[].slice.call(document.querySelectorAll('.check__list input')), cnt=document.getElementById('chk-count'), fill=document.getElementById('chk-fill'), done=document.getElementById('chk-done');
+  function upd(){var n=boxes.filter(function(b){return b.checked}).length;cnt.textContent='Отмечено '+n+' из '+boxes.length;fill.style.width=(n/boxes.length*100)+'%';done.hidden=n!==boxes.length;}
+  boxes.forEach(function(b){b.checked=!!ck[b.dataset.i];b.addEventListener('change',function(){ck[b.dataset.i]=b.checked;try{localStorage.setItem(CK,JSON.stringify(ck))}catch(e){}upd();});});
+  upd();
+})();
+</script>
+
+</body>
+</html>
